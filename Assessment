@@ -1,0 +1,172 @@
+
+import java.util.*;
+
+// 1. Observer Pattern - Weather Station
+interface Observer {
+    void update(String weather);
+}
+
+interface Subject {
+    void addObserver(Observer o);
+    void removeObserver(Observer o);
+    void notifyObservers();
+}
+
+class WeatherStation implements Subject {
+    private List<Observer> observers = new ArrayList<>();
+    private String weather;
+
+    public void setWeather(String weather) {
+        this.weather = weather;
+        notifyObservers();
+    }
+
+    public void addObserver(Observer o) { observers.add(o); }
+    public void removeObserver(Observer o) { observers.remove(o); }
+
+    public void notifyObservers() {
+        for (Observer o : observers) o.update(weather);
+    }
+}
+
+class PhoneDisplay implements Observer {
+    private String name;
+    public PhoneDisplay(String name) { this.name = name; }
+    public void update(String weather) {
+        System.out.println(name + " display updated: Weather is now " + weather);
+    }
+}
+
+// 2. Strategy Pattern - Payment
+interface PaymentStrategy {
+    void pay(int amount);
+}
+
+class CreditCardPayment implements PaymentStrategy {
+    public void pay(int amount) { System.out.println("Paid " + amount + " using Credit Card."); }
+}
+
+class PayPalPayment implements PaymentStrategy {
+    public void pay(int amount) { System.out.println("Paid " + amount + " using PayPal."); }
+}
+
+class ShoppingCart {
+    private PaymentStrategy strategy;
+    public void setPaymentStrategy(PaymentStrategy strategy) { this.strategy = strategy; }
+    public void checkout(int amount) { strategy.pay(amount); }
+}
+
+// 3. Singleton Pattern - Logger
+class Logger {
+    private static Logger instance;
+    private Logger() {}
+    public static Logger getInstance() {
+        if (instance == null) instance = new Logger();
+        return instance;
+    }
+    public void log(String msg) { System.out.println("LOG: " + msg); }
+}
+
+// 4. Factory Pattern - Shape
+interface Shape { void draw(); }
+
+class Circle implements Shape {
+    public void draw() { System.out.println("Drawing Circle"); }
+}
+
+class Square implements Shape {
+    public void draw() { System.out.println("Drawing Square"); }
+}
+
+class ShapeFactory {
+    public static Shape getShape(String type) {
+        if (type.equalsIgnoreCase("circle")) return new Circle();
+        if (type.equalsIgnoreCase("square")) return new Square();
+        return null;
+    }
+}
+
+// 5. Adapter Pattern - Audio Player
+interface MediaPlayer { void play(String filename); }
+
+class Mp3Player implements MediaPlayer {
+    public void play(String filename) { System.out.println("Playing mp3 file: " + filename); }
+}
+
+class VLCPlayer {
+    public void playVLC(String filename) { System.out.println("Playing VLC file: " + filename); }
+}
+
+class MediaAdapter implements MediaPlayer {
+    VLCPlayer vlc = new VLCPlayer();
+    public void play(String filename) { vlc.playVLC(filename); }
+}
+
+// 6. Decorator Pattern - Coffee
+interface Coffee {
+    String getDescription();
+    double getCost();
+}
+
+class SimpleCoffee implements Coffee {
+    public String getDescription() { return "Simple Coffee"; }
+    public double getCost() { return 5.0; }
+}
+
+class MilkDecorator implements Coffee {
+    private Coffee coffee;
+    public MilkDecorator(Coffee coffee) { this.coffee = coffee; }
+    public String getDescription() { return coffee.getDescription() + ", Milk"; }
+    public double getCost() { return coffee.getCost() + 1.5; }
+}
+
+class SugarDecorator implements Coffee {
+    private Coffee coffee;
+    public SugarDecorator(Coffee coffee) { this.coffee = coffee; }
+    public String getDescription() { return coffee.getDescription() + ", Sugar"; }
+    public double getCost() { return coffee.getCost() + 0.5; }
+}
+public class DesignPatternsDemo {
+    public static void main(String[] args) {
+        System.out.println("===== 1. Observer Pattern =====");
+        WeatherStation station = new WeatherStation();
+        Observer phone1 = new PhoneDisplay("Phone1");
+        Observer phone2 = new PhoneDisplay("Phone2");
+        station.addObserver(phone1);
+        station.addObserver(phone2);
+        station.setWeather("Sunny");
+        station.setWeather("Rainy");
+
+        System.out.println("\n===== 2. Strategy Pattern =====");
+        ShoppingCart cart = new ShoppingCart();
+        cart.setPaymentStrategy(new CreditCardPayment());
+        cart.checkout(100);
+        cart.setPaymentStrategy(new PayPalPayment());
+        cart.checkout(200);
+
+        System.out.println("\n===== 3. Singleton Pattern =====");
+        Logger log1 = Logger.getInstance();
+        Logger log2 = Logger.getInstance();
+        log1.log("This is a log message.");
+        System.out.println("Logger instances same? " + (log1 == log2));
+
+        System.out.println("\n===== 4. Factory Pattern =====");
+        Shape c = ShapeFactory.getShape("circle");
+        Shape s = ShapeFactory.getShape("square");
+        c.draw();
+        s.draw();
+
+        System.out.println("\n===== 5. Adapter Pattern =====");
+        MediaPlayer mp3 = new Mp3Player();
+        mp3.play("song.mp3");
+        MediaPlayer vlcAdapter = new MediaAdapter();
+        vlcAdapter.play("movie.vlc");
+
+        System.out.println("\n===== 6. Decorator Pattern =====");
+        Coffee coffee = new SimpleCoffee();
+        coffee = new MilkDecorator(coffee);
+        coffee = new SugarDecorator(coffee);
+        System.out.println("Order: " + coffee.getDescription());
+        System.out.println("Total Cost: $" + coffee.getCost());
+    }
+}
