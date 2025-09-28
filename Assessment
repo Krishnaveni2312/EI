@@ -1,212 +1,177 @@
 1.
-import java.util.*;
-
-// 1. Observer Pattern - Weather Station
-interface Observer {
-    void update(String weather);
+import java.util.ArrayList;
+import java.util.List;
+// Observer Pattern
+interface Subscriber {
+    void update(String news);
 }
 
-interface Subject {
-    void addObserver(Observer o);
-    void removeObserver(Observer o);
-    void notifyObservers();
-}
-
-class WeatherStation implements Subject {
-    private List<Observer> observers = new ArrayList<>();
-    private String weather;
-
-    public void setWeather(String weather) {
-        this.weather = weather;
-        notifyObservers();
-    }
-
-    public void addObserver(Observer o) { observers.add(o); }
-    public void removeObserver(Observer o) { observers.remove(o); }
-
-    public void notifyObservers() {
-        for (Observer o : observers) o.update(weather);
-    }
-}
-
-class PhoneDisplay implements Observer {
+class NewsSubscriber implements Subscriber {
     private String name;
-    public PhoneDisplay(String name) { this.name = name; }
-    public void update(String weather) {
-        System.out.println(name + " display updated: Weather is now " + weather);
+    public NewsSubscriber(String name) { this.name = name; }
+    public void update(String news) { System.out.println(name + " received news: " + news); }
+}
+
+class NewsAgency {
+    private List<Subscriber> subscribers = new ArrayList<>();
+    public void addSubscriber(Subscriber sub) { subscribers.add(sub); }
+    public void removeSubscriber(Subscriber sub) { subscribers.remove(sub); }
+    public void notifySubscribers(String news) {
+        for (Subscriber sub : subscribers) sub.update(news);
     }
 }
 
-// 2. Strategy Pattern - Payment
-interface PaymentStrategy {
-    void pay(int amount);
-}
-
-class CreditCardPayment implements PaymentStrategy {
-    public void pay(int amount) { System.out.println("Paid " + amount + " using Credit Card."); }
-}
-
-class PayPalPayment implements PaymentStrategy {
-    public void pay(int amount) { System.out.println("Paid " + amount + " using PayPal."); }
-}
-
+// Strategy Pattern
+interface PaymentStrategy { void pay(double amount); }
+class CreditCardPayment implements PaymentStrategy { public void pay(double amount) { System.out.println("Paid " + amount + " using Credit Card."); } }
+class PayPalPayment implements PaymentStrategy { public void pay(double amount) { System.out.println("Paid " + amount + " using PayPal."); } }
 class ShoppingCart {
-    private PaymentStrategy strategy;
-    public void setPaymentStrategy(PaymentStrategy strategy) { this.strategy = strategy; }
-    public void checkout(int amount) { strategy.pay(amount); }
+    private PaymentStrategy paymentStrategy;
+    public void setPaymentStrategy(PaymentStrategy strategy) { this.paymentStrategy = strategy; }
+    public void checkout(double amount) { paymentStrategy.pay(amount); }
 }
-
-// 3. Singleton Pattern - Logger
-class Logger {
-    private static Logger instance;
-    private Logger() {}
-    public static Logger getInstance() {
-        if (instance == null) instance = new Logger();
+// Singleton Pattern
+class DatabaseConnection {
+    private static DatabaseConnection instance;
+    private DatabaseConnection() { System.out.println("Database connected!"); }
+    public static DatabaseConnection getInstance() {
+        if (instance == null) instance = new DatabaseConnection();
         return instance;
     }
-    public void log(String msg) { System.out.println("LOG: " + msg); }
+    public void query(String sql) { System.out.println("Executing query: " + sql); }
 }
 
-// 4. Factory Pattern - Shape
+// Factory Pattern
 interface Shape { void draw(); }
-
-class Circle implements Shape {
-    public void draw() { System.out.println("Drawing Circle"); }
-}
-
-class Square implements Shape {
-    public void draw() { System.out.println("Drawing Square"); }
-}
-
+class Circle implements Shape { public void draw() { System.out.println("Drawing Circle"); } }
+class Rectangle implements Shape { public void draw() { System.out.println("Drawing Rectangle"); } }
 class ShapeFactory {
-    public static Shape getShape(String type) {
-        if (type.equalsIgnoreCase("circle")) return new Circle();
-        if (type.equalsIgnoreCase("square")) return new Square();
+    public Shape getShape(String shapeType) {
+        if (shapeType == null) return null;
+        if (shapeType.equalsIgnoreCase("CIRCLE")) return new Circle();
+        if (shapeType.equalsIgnoreCase("RECTANGLE")) return new Rectangle();
         return null;
     }
 }
-
-// 5. Adapter Pattern - Audio Player
-interface MediaPlayer { void play(String filename); }
-
-class Mp3Player implements MediaPlayer {
-    public void play(String filename) { System.out.println("Playing mp3 file: " + filename); }
-}
-
-class VLCPlayer {
-    public void playVLC(String filename) { System.out.println("Playing VLC file: " + filename); }
-}
-
-class MediaAdapter implements MediaPlayer {
-    VLCPlayer vlc = new VLCPlayer();
-    public void play(String filename) { vlc.playVLC(filename); }
-}
-
-// 6. Decorator Pattern - Coffee
-interface Coffee {
-    String getDescription();
-    double getCost();
-}
-
-class SimpleCoffee implements Coffee {
-    public String getDescription() { return "Simple Coffee"; }
-    public double getCost() { return 5.0; }
-}
-
-class MilkDecorator implements Coffee {
-    private Coffee coffee;
-    public MilkDecorator(Coffee coffee) { this.coffee = coffee; }
-    public String getDescription() { return coffee.getDescription() + ", Milk"; }
-    public double getCost() { return coffee.getCost() + 1.5; }
-}
-
-class SugarDecorator implements Coffee {
-    private Coffee coffee;
-    public SugarDecorator(Coffee coffee) { this.coffee = coffee; }
-    public String getDescription() { return coffee.getDescription() + ", Sugar"; }
-    public double getCost() { return coffee.getCost() + 0.5; }
-}
-public class DesignPatternsDemo {
-    public static void main(String[] args) {
-        System.out.println("===== 1. Observer Pattern =====");
-        WeatherStation station = new WeatherStation();
-        Observer phone1 = new PhoneDisplay("Phone1");
-        Observer phone2 = new PhoneDisplay("Phone2");
-        station.addObserver(phone1);
-        station.addObserver(phone2);
-        station.setWeather("Sunny");
-        station.setWeather("Rainy");
-
-        System.out.println("\n===== 2. Strategy Pattern =====");
-        ShoppingCart cart = new ShoppingCart();
-        cart.setPaymentStrategy(new CreditCardPayment());
-        cart.checkout(100);
-        cart.setPaymentStrategy(new PayPalPayment());
-        cart.checkout(200);
-
-        System.out.println("\n===== 3. Singleton Pattern =====");
-        Logger log1 = Logger.getInstance();
-        Logger log2 = Logger.getInstance();
-        log1.log("This is a log message.");
-        System.out.println("Logger instances same? " + (log1 == log2));
-
-        System.out.println("\n===== 4. Factory Pattern =====");
-        Shape c = ShapeFactory.getShape("circle");
-        Shape s = ShapeFactory.getShape("square");
-        c.draw();
-        s.draw();
-
-        System.out.println("\n===== 5. Adapter Pattern =====");
-        MediaPlayer mp3 = new Mp3Player();
-        mp3.play("song.mp3");
-        MediaPlayer vlcAdapter = new MediaAdapter();
-        vlcAdapter.play("movie.vlc");
-
-        System.out.println("\n===== 6. Decorator Pattern =====");
-        Coffee coffee = new SimpleCoffee();
-        coffee = new MilkDecorator(coffee);
-        coffee = new SugarDecorator(coffee);
-        System.out.println("Order: " + coffee.getDescription());
-        System.out.println("Total Cost: $" + coffee.getCost());
+// Adapter Pattern
+interface Socket110V { void supply110V(); }
+class Device220V { void supply220V() { System.out.println("Device running on 220V"); } }
+class VoltageAdapter implements Socket110V {
+    private Device220V device;
+    public VoltageAdapter(Device220V device) { this.device = device; }
+    public void supply110V() {
+        System.out.println("Converting 110V to 220V...");
+        device.supply220V();
     }
 }
 
-2.// SmartOfficeDemo.java
+// Decorator Pattern
+interface Coffee { String getDescription(); double cost(); }
+class SimpleCoffee implements Coffee { public String getDescription() { return "Simple Coffee"; } public double cost() { return 5.0; } }
+abstract class CoffeeDecorator implements Coffee {
+    protected Coffee coffee;
+    public CoffeeDecorator(Coffee coffee) { this.coffee = coffee; }
+}
+class MilkDecorator extends CoffeeDecorator {
+    public MilkDecorator(Coffee coffee) { super(coffee); }
+    public String getDescription() { return coffee.getDescription() + ", Milk"; }
+    public double cost() { return coffee.cost() + 2.0; }
+}
+class SugarDecorator extends CoffeeDecorator {
+    public SugarDecorator(Coffee coffee) { super(coffee); }
+    public String getDescription() { return coffee.getDescription() + ", Sugar"; }
+    public double cost() { return coffee.cost() + 1.0; }
+}
+public class DesignPatternsDemo {
+    public static void main(String[] args) {
+        System.out.println("=== Behavioural Patterns ===");
+        // Observer
+        NewsAgency agency = new NewsAgency();
+        agency.addSubscriber(new NewsSubscriber("Alice"));
+        agency.addSubscriber(new NewsSubscriber("Bob"));
+        agency.notifySubscribers("Breaking News: Java 21 released!");
+
+        // Strategy
+        ShoppingCart cart = new ShoppingCart();
+        cart.setPaymentStrategy(new CreditCardPayment());
+        cart.checkout(500);
+        cart.setPaymentStrategy(new PayPalPayment());
+        cart.checkout(300);
+
+        System.out.println("\n=== Creational Patterns ===");
+        // Singleton
+        DatabaseConnection db1 = DatabaseConnection.getInstance();
+        DatabaseConnection db2 = DatabaseConnection.getInstance();
+        db1.query("SELECT * FROM users");
+        System.out.println("db1 == db2: " + (db1 == db2));
+
+        // Factory
+        ShapeFactory factory = new ShapeFactory();
+        Shape shape1 = factory.getShape("CIRCLE");
+        shape1.draw();
+        Shape shape2 = factory.getShape("RECTANGLE");
+        shape2.draw();
+
+        System.out.println("\n=== Structural Patterns ===");
+        // Adapter
+        Device220V device = new Device220V();
+        Socket110V adapter = new VoltageAdapter(device);
+        adapter.supply110V();
+
+        // Decorator
+        Coffee coffee = new SimpleCoffee();
+        coffee = new MilkDecorator(coffee);
+        coffee = new SugarDecorator(coffee);
+        System.out.println(coffee.getDescription() + " costs " + coffee.cost());
+    }
+}
+
+2.
 import java.util.*;
 
+// ===== Singleton: Office Configuration =====
 class OfficeConfig {
     private static OfficeConfig instance;
-    private int roomCount;
     private Map<Integer, Room> rooms = new HashMap<>();
 
     private OfficeConfig() {}
+
     public static OfficeConfig getInstance() {
         if (instance == null) instance = new OfficeConfig();
         return instance;
     }
+
     public void configure(int count) {
-        this.roomCount = count;
-        for (int i = 1; i <= count; i++) rooms.put(i, new Room(i));
+        for (int i = 1; i <= count; i++) {
+            rooms.put(i, new Room(i));
+        }
         System.out.println("Office configured with " + count + " meeting rooms.");
     }
+
     public Room getRoom(int id) { return rooms.get(id); }
 }
 
-interface Observer { void update(boolean occupied, int roomId); }
+// ===== Observer Pattern =====
+interface Observer {
+    void update(boolean occupied, int roomId);
+}
 
 class LightSystem implements Observer {
-    public void update(boolean occupied, int id) {
-        System.out.println("Room " + id + " Lights " + (occupied ? "ON" : "OFF"));
-    }
-}
-class ACSystem implements Observer {
-    public void update(boolean occupied, int id) {
-        System.out.println("Room " + id + " AC " + (occupied ? "ON" : "OFF"));
+    public void update(boolean occupied, int roomId) {
+        System.out.println("Room " + roomId + " Lights " + (occupied ? "ON" : "OFF"));
     }
 }
 
+class ACSystem implements Observer {
+    public void update(boolean occupied, int roomId) {
+        System.out.println("Room " + roomId + " AC " + (occupied ? "ON" : "OFF"));
+    }
+}
+
+// ===== Room Class =====
 class Room {
-    private int id, occupants = 0;
+    private int id;
+    private int occupants = 0;
     private boolean booked = false;
     private List<Observer> observers = new ArrayList<>();
 
@@ -215,63 +180,115 @@ class Room {
         observers.add(new LightSystem());
         observers.add(new ACSystem());
     }
+
     public void addOccupants(int n) {
         occupants = n;
         boolean occupied = occupants >= 2;
         System.out.println("Room " + id + " occupants: " + n + (occupied ? " (Occupied)" : " (Not occupied)"));
-        notifyAll(occupied);
-        if (!occupied && booked) { // auto-release
+        notifyObservers(occupied);
+
+        // Auto-release booking if room is empty
+        if (!occupied && booked) {
             booked = false;
             System.out.println("Booking for Room " + id + " released due to no occupancy.");
         }
     }
+
     public boolean book(String time, int duration) {
-        if (booked) { System.out.println("Room " + id + " already booked!"); return false; }
+        if (booked) {
+            System.out.println("Room " + id + " already booked!");
+            return false;
+        }
         booked = true;
         System.out.println("Room " + id + " booked at " + time + " for " + duration + " mins.");
         return true;
     }
+
     public void cancel() {
-        if (!booked) System.out.println("Room " + id + " not booked.");
-        else { booked = false; System.out.println("Booking for Room " + id + " cancelled."); }
+        if (!booked) {
+            System.out.println("Room " + id + " not booked.");
+        } else {
+            booked = false;
+            System.out.println("Booking for Room " + id + " cancelled.");
+        }
     }
-    private void notifyAll(boolean occupied) { for (Observer o : observers) o.update(occupied, id); }
+
+    private void notifyObservers(boolean occupied) {
+        for (Observer o : observers) o.update(occupied, id);
+    }
 }
 
-interface Command { void execute(); }
+// ===== Command Pattern =====
+interface Command {
+    void execute();
+}
 
 class BookRoomCommand implements Command {
-    private Room room; private String time; private int duration;
-    public BookRoomCommand(Room r, String t, int d) { room = r; time = t; duration = d; }
-    public void execute() { room.book(time, duration); }
+    private Room room;
+    private String time;
+    private int duration;
+
+    public BookRoomCommand(Room room, String time, int duration) {
+        this.room = room;
+        this.time = time;
+        this.duration = duration;
+    }
+
+    public void execute() {
+        room.book(time, duration);
+    }
 }
+
 class CancelRoomCommand implements Command {
-    private Room room; public CancelRoomCommand(Room r) { room = r; }
-    public void execute() { room.cancel(); }
+    private Room room;
+
+    public CancelRoomCommand(Room room) {
+        this.room = room;
+    }
+
+    public void execute() {
+        room.cancel();
+    }
 }
+
 class OccupancyCommand implements Command {
-    private Room room; private int count;
-    public OccupancyCommand(Room r, int c) { room = r; count = c; }
-    public void execute() { room.addOccupants(count); }
+    private Room room;
+    private int count;
+
+    public OccupancyCommand(Room room, int count) {
+        this.room = room;
+        this.count = count;
+    }
+
+    public void execute() {
+        room.addOccupants(count);
+    }
 }
+
+// ===== Main Class =====
 public class SmartOfficeDemo {
     public static void main(String[] args) {
+        // Configure office
         OfficeConfig config = OfficeConfig.getInstance();
         config.configure(2);
 
+        // Get Room 1
         Room r1 = config.getRoom(1);
 
+        System.out.println("\n--- Booking Room ---");
         Command book = new BookRoomCommand(r1, "09:00", 60);
         book.execute();
 
+        System.out.println("\n--- Occupying Room ---");
         Command occupy = new OccupancyCommand(r1, 2);
         occupy.execute();
 
+        System.out.println("\n--- Leaving Room ---");
         Command leave = new OccupancyCommand(r1, 0);
         leave.execute();
 
+        System.out.println("\n--- Cancelling Booking ---");
         Command cancel = new CancelRoomCommand(r1);
         cancel.execute();
     }
 }
-
