@@ -170,3 +170,108 @@ public class DesignPatternsDemo {
         System.out.println("Total Cost: $" + coffee.getCost());
     }
 }
+
+2.// SmartOfficeDemo.java
+import java.util.*;
+
+class OfficeConfig {
+    private static OfficeConfig instance;
+    private int roomCount;
+    private Map<Integer, Room> rooms = new HashMap<>();
+
+    private OfficeConfig() {}
+    public static OfficeConfig getInstance() {
+        if (instance == null) instance = new OfficeConfig();
+        return instance;
+    }
+    public void configure(int count) {
+        this.roomCount = count;
+        for (int i = 1; i <= count; i++) rooms.put(i, new Room(i));
+        System.out.println("Office configured with " + count + " meeting rooms.");
+    }
+    public Room getRoom(int id) { return rooms.get(id); }
+}
+
+interface Observer { void update(boolean occupied, int roomId); }
+
+class LightSystem implements Observer {
+    public void update(boolean occupied, int id) {
+        System.out.println("Room " + id + " Lights " + (occupied ? "ON" : "OFF"));
+    }
+}
+class ACSystem implements Observer {
+    public void update(boolean occupied, int id) {
+        System.out.println("Room " + id + " AC " + (occupied ? "ON" : "OFF"));
+    }
+}
+
+class Room {
+    private int id, occupants = 0;
+    private boolean booked = false;
+    private List<Observer> observers = new ArrayList<>();
+
+    public Room(int id) {
+        this.id = id;
+        observers.add(new LightSystem());
+        observers.add(new ACSystem());
+    }
+    public void addOccupants(int n) {
+        occupants = n;
+        boolean occupied = occupants >= 2;
+        System.out.println("Room " + id + " occupants: " + n + (occupied ? " (Occupied)" : " (Not occupied)"));
+        notifyAll(occupied);
+        if (!occupied && booked) { // auto-release
+            booked = false;
+            System.out.println("Booking for Room " + id + " released due to no occupancy.");
+        }
+    }
+    public boolean book(String time, int duration) {
+        if (booked) { System.out.println("Room " + id + " already booked!"); return false; }
+        booked = true;
+        System.out.println("Room " + id + " booked at " + time + " for " + duration + " mins.");
+        return true;
+    }
+    public void cancel() {
+        if (!booked) System.out.println("Room " + id + " not booked.");
+        else { booked = false; System.out.println("Booking for Room " + id + " cancelled."); }
+    }
+    private void notifyAll(boolean occupied) { for (Observer o : observers) o.update(occupied, id); }
+}
+
+interface Command { void execute(); }
+
+class BookRoomCommand implements Command {
+    private Room room; private String time; private int duration;
+    public BookRoomCommand(Room r, String t, int d) { room = r; time = t; duration = d; }
+    public void execute() { room.book(time, duration); }
+}
+class CancelRoomCommand implements Command {
+    private Room room; public CancelRoomCommand(Room r) { room = r; }
+    public void execute() { room.cancel(); }
+}
+class OccupancyCommand implements Command {
+    private Room room; private int count;
+    public OccupancyCommand(Room r, int c) { room = r; count = c; }
+    public void execute() { room.addOccupants(count); }
+}
+public class SmartOfficeDemo {
+    public static void main(String[] args) {
+        OfficeConfig config = OfficeConfig.getInstance();
+        config.configure(2);
+
+        Room r1 = config.getRoom(1);
+
+        Command book = new BookRoomCommand(r1, "09:00", 60);
+        book.execute();
+
+        Command occupy = new OccupancyCommand(r1, 2);
+        occupy.execute();
+
+        Command leave = new OccupancyCommand(r1, 0);
+        leave.execute();
+
+        Command cancel = new CancelRoomCommand(r1);
+        cancel.execute();
+    }
+}
+
